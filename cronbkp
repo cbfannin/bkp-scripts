@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+
+# Project Information.
+project_root=""
+project_dir=""
+db_dir=""
+files_dir=""
+
+# Database Information.
+db_user=""
+db_pass=""
+db_host=""
+db_name=""
+
+# Clear Cache
+cd ${project_root}/${project_dir}
+drush cr
+
+# Build backup paths and file names.
+backup_path="/usr/local/lib/${project_dir}"
+if [ ! -d "${backup_path}/${db_dir}" ]; then
+  mkdir -p "${backup_path}/${db_dir}"
+fi
+  db_bkps_path="${backup_path}/${db_dir}"
+
+if [ ! -d "${backup_path}/${files_dir}" ]; then
+  mkdir -p "${backup_path}/${files_dir}"
+fi
+  files_bkps_path="${backup_path}/${files_dir}"
+
+date="$(date +"%Y%m%d")"
+filename="${project_dir}_${date}"
+
+# Dump database to SQL file.
+sqldump_path="$(which mysqldump)"
+${sqldump_path} -u ${db_user} --password=${db_pass} --host=${db_host} ${db_name} > "${db_bkps_path}/${filename}_db.sql"
+
+# Compress backups.
+gzip "${db_bkps_path}/${filename}_db.sql"
+tar -zcf "${files_bkps_path}/${filename}_files.tar.gz" -C ${project_root}/${project_dir}/web/sites/default/ files 
+
+# Delete backups older than 30 days
+find ${db_bkps_path}/* -name *.gz -mtime +30 -exec rm {} \;
+find ${files_bkps_path}/* -name *.gz -mtime +30 -exec rm {} \;

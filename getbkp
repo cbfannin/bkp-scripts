@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# Project Variables
+remote_user=''
+remote_project=''
+remote_bkp_dbpath=''
+remote_bkp_filespath=''
+local_bkp_path=''
+
+database=$(ssh ${remote_project} "ls -t ${remote_bkp_dbpath} | head -1")
+scp ${remote_user}@${remote_project}:${remote_bkp_dbpath}/${database} ${local_bkp_path} 
+
+files=$(ssh ${remote_project} "ls -t ${remote_bkp_filespath} | head -1")
+scp ${remote_user}@${remote_project}:${remote_bkp_filespath}/${files} ${local_bkp_path} 
